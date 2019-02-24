@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for
+    Blueprint, flash, current_app, g, redirect, render_template, request, url_for
 )
 from werkzeug.exceptions import abort
 import json
@@ -15,6 +15,8 @@ def accounts():
 
         # import ipdb
         # ipdb.set_trace()
+
+        current_app.logger.info('POST called on /accounts',)
 
         account_name = request.get_json()['account_name']
         available_balance = int(request.get_json()['available_balance'])

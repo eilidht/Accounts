@@ -30,4 +30,7 @@ def create_app(test_config=None):
     from . import account
     app.register_blueprint(account.bp)
 
+    from . import logging
+    logging.init_logging()
+
     return app

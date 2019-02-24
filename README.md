@@ -14,3 +14,7 @@ pip install python-dotenv
 
 ### Production
 Use a production WSGI server such as nginx.
+
+## Logging
+The log files will be written to the logs folder. There is an access log which records calls to the service  and 
+an accounts log which logs accounts created or fetched.
