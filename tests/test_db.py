@@ -26,3 +26,12 @@ def test_init_db_command(runner, monkeypatch):
     result = runner.invoke(args=['init-db'])
     assert 'Initialized' in result.output
     assert Recorder.called
+
+
+# def test_balance_init_to_zero(app):
+#     with app.app_context():
+#         db = get_db()
+#         available_balance = db.execute("SELECT available_balance from account where account_type = 'DEPOSIT'")
+#         import ipdb
+#         ipdb.set_trace()
+#         assert available_balance == 0

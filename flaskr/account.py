@@ -1,10 +1,11 @@
 from flask import (
-    Blueprint, flash, current_app, g, redirect, render_template, request, url_for
+    Blueprint, flash, current_app, request
 )
 from werkzeug.exceptions import abort
 import json
 
 from flaskr.db import get_db
+from flask import jsonify
 
 bp = Blueprint('account', __name__, url_prefix='/v1')
 
@@ -13,26 +14,37 @@ bp = Blueprint('account', __name__, url_prefix='/v1')
 def accounts():
     if request.method == 'POST':
 
-        # import ipdb
-        # ipdb.set_trace()
-
         current_app.logger.info('POST called on /accounts',)
 
-        account_name = request.get_json()['account_name']
-        available_balance = int(request.get_json()['available_balance'])
+        account_nickname = request.get_json()['account_nickname']
+        account_owner_name = request.get_json()['account_owner_name']
+        account_type = request.get_json()['account_type']
+        currency = request.get_json()['currency']
 
         db = get_db()
         error = None
 
-        if not account_name:
-            error = 'Account data is required.'  # TODO test other inputs
+        # if not account_name:
+        #     error = 'Account data is required.'  # TODO test other inputs
         if error is None:
             db.execute(
-                'INSERT INTO account (account_name, available_balance) VALUES (?, ?)',
-                (account_name, available_balance)
+                'INSERT INTO account (account_nickname, account_owner_name, account_type, currency) VALUES (?,?,?,?)',
+                (account_nickname, account_owner_name, account_type, currency)
+                # 'INSERT INTO account (account_name, available_balance) VALUES (?, ?)',
+                # (account_name, available_balance)
             )
             db.commit()
-            return 'account created'
+            # TODO fetch other data too
+            account = db.execute(
+                'SELECT id, account_name, available_balance FROM account where id = last_insert_rowid()'
+                ).fetchone()
+
+            # TODO refactor
+            account_as_dict = {'id': account[0],
+                               'account_name': account[1],
+                               'available_balance': account[2]}
+
+            return jsonify(account_as_dict), 201
 
         flash(error)
         return 'There was an error when creating the account'
@@ -52,4 +64,4 @@ def accounts():
 
         result = {'accounts': accounts}
 
-        return json.dumps(result)
+        return jsonify(result)
