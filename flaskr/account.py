@@ -2,22 +2,22 @@ from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for
 )
 from werkzeug.exceptions import abort
-import simplejson
+import json
 
 from flaskr.db import get_db
 
 bp = Blueprint('account', __name__, url_prefix='/v1')
 
 
-
-
 @bp.route('/accounts', methods=('GET', 'POST'))
 def accounts():
     if request.method == 'POST':
-        # account_data = request.body()  # TODO use input data
 
-        account_name = 'a test account'
-        available_balance = 1000
+        # import ipdb
+        # ipdb.set_trace()
+
+        account_name = request.get_json()['account_name']
+        available_balance = int(request.get_json()['available_balance'])
 
         db = get_db()
         error = None
@@ -48,4 +48,6 @@ def accounts():
                                'available_balance': account[2]}
             accounts.append(account_as_dict)
 
-        return simplejson.dumps(accounts)
+        result = {'accounts': accounts}
+
+        return json.dumps(result)
