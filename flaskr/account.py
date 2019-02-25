@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, flash, current_app, request
+    Blueprint, flash, current_app, request, abort
 )
 
 from flaskr.db import get_db
@@ -7,24 +7,28 @@ from flask import jsonify
 
 bp = Blueprint('account', __name__, url_prefix='/v1')
 
+valid_account_types = ["DEPOSIT", "SAVING", "CURRENCY"]
+
 
 @bp.route('/accounts', methods=('GET', 'POST'))
 def accounts():
     if request.method == 'POST':
+        current_app.logger.info('POST called on /v1/accounts with data: \t{}'.format(request.get_json()))
 
-        current_app.logger.info('POST called on /accounts',)
-
-        account_name = request.get_json()['account_name']
-        account_nickname = request.get_json()['account_nickname']
-        account_owner_name = request.get_json()['account_owner_name']
-        account_type = request.get_json()['account_type']
-        currency = request.get_json()['currency']
+        try:  # reading input data
+            account_name = request.get_json()['account_name']
+            account_nickname = request.get_json()['account_nickname']
+            account_owner_name = request.get_json()['account_owner_name']
+            account_type = request.get_json()['account_type']
+            currency = request.get_json()['currency']
+        except Exception as e:
+            current_app.logger.error('An exception occurred: \t{}'.format(e))
+            abort(400)
 
         db = get_db()
-        error = None
 
-        # if not account_name:
-        #     error = 'Account data is required.'  # TODO test other inputs
+        error = validate_account_type(account_type)
+
         if error is None:
             db.execute(
                 'INSERT INTO account (account_name, account_nickname, account_owner_name, account_type, currency) '
@@ -41,10 +45,11 @@ def accounts():
 
             return jsonify(account), 201
 
-        flash(error)
-        return 'There was an error when creating the account'
+        current_app.logger.error('An error occurred: \t{}'.format(error))
+        return error, 400
 
     if request.method == 'GET':
+        current_app.logger.info('GET called on /v1/accounts')
         db_accounts = get_db().execute(
             select_row_items(),
         ).fetchall()
@@ -58,6 +63,14 @@ def accounts():
         result = {'accounts': accounts_list}
 
         return jsonify(result)
+
+
+def validate_account_type(account_type):
+    error = None
+    if account_type not in valid_account_types:
+        error = 'Account type {} is not valid'.format(account_type)
+
+    return error
 
 
 def select_row_items():
