@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, flash, current_app, request, abort
+    Blueprint, current_app, request, abort
 )
 
 from flaskr.db import get_db
