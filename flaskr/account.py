@@ -1,8 +1,6 @@
 from flask import (
     Blueprint, flash, current_app, request
 )
-from werkzeug.exceptions import abort
-import json
 
 from flaskr.db import get_db
 from flask import jsonify
@@ -16,6 +14,7 @@ def accounts():
 
         current_app.logger.info('POST called on /accounts',)
 
+        account_name = request.get_json()['account_name']
         account_nickname = request.get_json()['account_nickname']
         account_owner_name = request.get_json()['account_owner_name']
         account_type = request.get_json()['account_type']
@@ -28,40 +27,59 @@ def accounts():
         #     error = 'Account data is required.'  # TODO test other inputs
         if error is None:
             db.execute(
-                'INSERT INTO account (account_nickname, account_owner_name, account_type, currency) VALUES (?,?,?,?)',
-                (account_nickname, account_owner_name, account_type, currency)
-                # 'INSERT INTO account (account_name, available_balance) VALUES (?, ?)',
-                # (account_name, available_balance)
+                'INSERT INTO account (account_name, account_nickname, account_owner_name, account_type, currency) '
+                'VALUES (?,?,?,?,?)',
+                (account_name, account_nickname, account_owner_name, account_type, currency)
             )
             db.commit()
-            # TODO fetch other data too
-            account = db.execute(
-                'SELECT id, account_name, available_balance FROM account where id = last_insert_rowid()'
+            account_row = db.execute(
+                select_row_items() +
+                ' WHERE id = last_insert_rowid()'
                 ).fetchone()
 
-            # TODO refactor
-            account_as_dict = {'id': account[0],
-                               'account_name': account[1],
-                               'available_balance': account[2]}
+            account = account_from_row(account_row)
 
-            return jsonify(account_as_dict), 201
+            return jsonify(account), 201
 
         flash(error)
         return 'There was an error when creating the account'
 
     if request.method == 'GET':
         db_accounts = get_db().execute(
-            'SELECT id, account_name, available_balance FROM account',
+            select_row_items(),
         ).fetchall()
 
-        accounts = []
+        accounts_list = []
 
-        for account in db_accounts:
-            account_as_dict = {'id': account[0],
-                               'account_name': account[1],
-                               'available_balance': account[2]}
-            accounts.append(account_as_dict)
+        for account_row in db_accounts:
+            account = account_from_row(account_row)
+            accounts_list.append(account)
 
-        result = {'accounts': accounts}
+        result = {'accounts': accounts_list}
 
         return jsonify(result)
+
+
+def select_row_items():
+    return 'SELECT id, ' \
+           'account_name, ' \
+           'account_nickname, ' \
+           'account_owner_name, ' \
+           'account_type, ' \
+           'currency, ' \
+           'available_balance, ' \
+           'booked_balance, ' \
+           'status ' \
+           'FROM account'
+
+
+def account_from_row(account_row):
+    return {'account_number': str(account_row[0]),
+            'account_name': account_row[1],
+            'account_nickname': account_row[2],
+            'account_owner_name': account_row[3],
+            'account_type': account_row[4],
+            'currency': account_row[5],
+            'available_balance': str(account_row[6]),
+            'booked_balance': str(account_row[7]),
+            'status': account_row[8]}
