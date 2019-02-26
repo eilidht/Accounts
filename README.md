@@ -1,5 +1,8 @@
 # Accounts
 
+## Service Specification
+The service interface is defined in the spec/accounts.yml file.
+
 ## Setting up your environment
 These instructions assume that you are running MacOSX with a functioning python version 3.7.0, although they should be broadly applicable
 to Unix and Linux variants. If you are running a Windows based operating system please follow the instructions
@@ -8,14 +11,6 @@ on the python website.
 `brew install pyenv`
 
 `pyenv install 3.7.0`
-
-
-## Requirements
-python 3.7.0
-
-pip install flask
-
-pip install python-dotenv
 
 ## Deployment
 
